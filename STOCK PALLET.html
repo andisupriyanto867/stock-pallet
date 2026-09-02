@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2563EB">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stock Pallet">
+<link rel="apple-touch-icon" href="https://res.cloudinary.com/vf5nikiz/image/upload/v1785164146/IMG_20260707_085722_slsyiz.jpg">
+<link id="manifest-link" rel="manifest">
+<title>Input Stock Pallet</title>
+<style>
+  :root{
+    --bg:#F8FAFC;
+    --panel:#FFFFFF;
+    --panel-2:#F1F5F9;
+    --border:#E2E8F0;
+    --text:#0F172A;
+    --muted:#64748B;
+    --danger:#EF4444;
+    --danger-light:#FEF2F2;
+    --success:#10B981;
+    --success-light:#ECFDF5;
+    
+    /* Variabel Warna Menu Aktif (Default: Input/Biru) */
+    --theme-main:#2563EB;
+    --theme-main-hover:#1D4ED8;
+    --theme-light:#EFF6FF;
+    --theme-dim:#DBEAFE;
+
+    --mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --sans: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
+    --r-sm:8px; --r-md:12px; --r-lg:18px;
+    --shadow-sm: 0 1px 3px rgba(15,23,42,0.04), 0 1px 2px rgba(15,23,42,0.02);
+    --shadow-md: 0 4px 6px -1px rgba(15,23,42,0.05), 0 2px 4px -1px rgba(15,23,42,0.03);
+    --shadow-lg: 0 10px 25px -3px rgba(15,23,42,0.08), 0 4px 6px -2px rgba(15,23,42,0.04);
+  }
+
+  /* Tema Warna Berdasarkan Tab Aktif */
+  body.theme-input { --theme-main:#2563EB; --theme-main-hover:#1D4ED8; --theme-light:#EFF6FF; --theme-dim:#DBEAFE; }
+  body.theme-dashboard { --theme-main:#7C3AED; --theme-main-hover:#6D28D9; --theme-light:#F5F3FF; --theme-dim:#EDE9FE; }
+  body.theme-data { --theme-main:#0D9488; --theme-main-hover:#0F766E; --theme-light:#F0FDFA; --theme-dim:#CCFBF1; }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);width:100%;overflow-x:hidden;}
+  body{min-height:100vh;padding-bottom:60px;}
+  ::selection{background:var(--theme-main);color:#FFFFFF;}
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important;} }
+
+  .app-shell{
+    max-width:480px;
+    margin:0 auto;
+    width:100%;
+    min-height:100vh;
+    background:var(--bg);
+    position:relative;
+    box-shadow: var(--shadow-lg);
+  }
+  @media(min-width: 768px){
+    .app-shell{ max-width:768px; }
+  }
+
+  /* ===== GLOBAL LOADING OVERLAY ===== */
+  .global-loader {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.4);
+    backdrop-filter: blur(4px); z-index: 9999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+  }
+  .global-loader.active { opacity: 1; pointer-events: auto; }
+  .loader-card{ background:#fff; padding:20px 26px; border-radius:var(--r-md); box-shadow:var(--shadow-lg); display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .spinner {
+    width: 34px; height: 34px; border: 3.5px solid var(--theme-dim);
+    border-top-color: var(--theme-main); border-radius: 50%;
+    animation: spin 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+  #loaderText{ font-weight:700; color:var(--theme-main); font-size:13px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  
+  /* Animasi Transisi Halus */
+  @keyframes fadeSlideUp { 
+    from { opacity: 0; transform: translateY(12px) scale(0.98); } 
+    to { opacity: 1; transform: translateY(0) scale(1); } 
+  }
+  .fade-in{ animation: fadeSlideUp .35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+  /* ===== TOP BAR ===== */
+  .topbar{
+    display:flex;align-items:center;gap:8px;
+    padding:10px 14px;
+    background:#FFFFFF;
+    border-bottom:1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    position:sticky;top:0;z-index:50;
+  }
+  .logo-frame{
+    width:68px;height:26px; border:1px solid var(--border); background:#FFFFFF;
+    flex-shrink:0; display:flex;align-items:center;justify-content:center;
+    overflow:hidden; border-radius:var(--r-sm);
+  }
+  .logo-frame img{width:100%;height:100%;object-fit:contain;display:block;}
+  .brand-block{display:flex;flex-direction:column;flex:1;min-width:0;}
+  .brand-title{font-size:11.5px;font-weight:700;letter-spacing:.2px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+  .brand-sub{font-family:var(--mono);font-size:9.5px;color:var(--theme-main);letter-spacing:.3px;font-weight:700; transition: color 0.3s;}
+  
+  .clock-block{
+    text-align:right;flex-shrink:0;padding-left:10px;border-left:1px solid var(--border);
+    display:flex; flex-direction:column; justify-content:center; min-width: 86px;
+  }
+  .clock-time{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--theme-main);line-height:1.2; transition: color 0.3s;}
+  .clock-date{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted);line-height:1.25;}
+
+  .pic-block{display:flex;align-items:center;gap:6px;flex-shrink:0;padding-left:8px;border-left:1px solid var(--border);}
+  .pic-photo{
+    width:28px;height:28px;border-radius:50%; border:2px solid var(--theme-dim); background:var(--panel-2);
+    display:flex;align-items:center;justify-content:center; font-family:var(--mono);color:var(--muted);font-size:10px;font-weight:700;
+    overflow:hidden;flex-shrink:0; transition: border-color 0.3s;
+  }
+  .pic-photo img{width:100%;height:100%;object-fit:cover;}
+  .pic-text{display:flex;flex-direction:column;line-height:1.15;}
+  .pic-role{font-size:7.5px;letter-spacing:.3px;color:var(--muted);font-weight:700;}
+  .pic-name{font-size:11px;font-weight:700;}
+
+  /* ===== NAV TABS ===== */
+  .nav-tabs{display:flex;gap:0;background:#FFFFFF;border-bottom:1px solid var(--border);position:sticky;top:53px;z-index:40; box-shadow: var(--shadow-sm);}
+  .nav-tab{
+    flex:1; text-align:center; padding:12px 6px; font-size:12.5px; font-weight:700; color:var(--muted);
+    border-bottom:3px solid transparent; cursor:pointer; letter-spacing:.2px; transition: all 0.25s ease;
+    position: relative;
+  }
+  .nav-tab:hover{ color:var(--theme-main); background:var(--panel-2); }
+  .nav-tab.active {
+    color: var(--theme-main);
+    border-bottom-color: var(--theme-main);
+    background: var(--theme-light);
+  }
+
+  .wrap{padding:16px;}
+
+  /* ===== STEPPER ===== */
+  .stepper{display:flex;align-items:center;gap:6px;margin-bottom:16px;font-family:var(--mono);font-size:11px;}
+  .step-chip{padding:4px 10px;border:1px solid var(--border);background:#FFFFFF;color:var(--muted);border-radius:var(--r-sm); transition:all 0.2s ease;}
+  .step-chip.done{color:var(--theme-main);border-color:var(--theme-dim);background:var(--theme-light); font-weight:700;}
+  .step-arrow{color:var(--muted);}
+
+  h2.section-title{font-size:16px;font-weight:800;margin:0 0 4px;letter-spacing:-0.2px;color:var(--text);}
+  p.section-hint{font-size:12px;color:var(--muted);margin:0 0 14px;}
+
+  /* ===== TULISAN BERJALAN (MARQUEE) HIJAU ===== */
+  .marquee-box {
+    background: var(--success-light);
+    border: 1.5px dashed var(--success);
+    color: var(--success);
+    padding: 8px 12px;
+    border-radius: var(--r-md);
+    font-size: 11.5px;
+    font-weight: 700;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .marquee-content {
+    display: inline-block;
+    animation: marquee 16s linear infinite;
+  }
+  @keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* ===== SELECT GRID & WARNA BERBEDA TIAP ITEM ===== */
+  .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .choice-btn{
+    position:relative; background:#FFFFFF; border:1.5px solid var(--border); padding:18px 14px;
+    text-align:left; font-family:var(--sans); font-size:14px; font-weight:800;
+    cursor:pointer; border-radius:var(--r-md); box-shadow: var(--shadow-sm);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display:flex; align-items:center; justify-content:center;
+  }
+  
+  /* Kombinasi Warna Khusus untuk Setiap Item Tombol Pilihan */
+  .choice-btn:nth-child(1) { color: #1E40AF; border-color: #93C5FD; background: #EFF6FF; }
+  .choice-btn:nth-child(2) { color: #065F46; border-color: #6EE7B7; background: #ECFDF5; }
+  .choice-btn:nth-child(3) { color: #5B21B6; border-color: #C4B5FD; background: #F5F3FF; }
+  .choice-btn:nth-child(4) { color: #9A3412; border-color: #FDBA74; background: #FFF7ED; }
+
+  .choice-btn:hover{
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    filter: brightness(0.95);
+  }
+  .choice-btn:active{ transform:scale(0.94); }
+
+  /* ===== FORM & INPUT STYLING ===== */
+  .form-panel{
+    background:#FFFFFF; border:1.5px solid var(--border); padding:18px; border-radius:var(--r-lg); box-shadow: var(--shadow-md);
+    transition: border-color 0.3s;
+  }
+  .field{margin-bottom:14px;}
+  .field label{display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:6px;}
+  
+  .field input, .field select{
+    width:100%; background:#F8FAFC;
+    border:1.5px solid var(--border);
+    color:var(--text);
+    padding:11px 13px; font-size:14px; font-family:var(--sans); border-radius:var(--r-md);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .field input:hover, .field select:hover{ border-color: #94A3B8; }
+  .field input:focus, .field select:focus{
+    outline:none;
+    border-color: var(--theme-main);
+    background:#FFFFFF;
+    box-shadow: 0 0 0 4px var(--theme-dim), 0 2px 4px rgba(0,0,0,0.02);
+    transform: translateY(-1px);
+  }
+
+  .auto-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .auto-fields .field input[readonly]{background:#F1F5F9; color:var(--theme-main); font-weight:700;}
+
+  /* ===== TOMBOL SIMPAN KE SPREADSHEET ===== */
+  .btn-submit-sheet {
+    width: 100%;
+    background: linear-gradient(135deg, var(--theme-main), var(--theme-main-hover));
+    color: #FFFFFF;
+    border: none;
+    padding: 14px 20px;
+    font-size: 14.5px;
+    font-weight: 800;
+    font-family: var(--sans);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-submit-sheet:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+  }
+  .btn-submit-sheet:active {
+    transform: scale(0.96) translateY(0);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  .btn-submit-sheet:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  /* TOMBOL KEMBALI MERAH */
+  .back-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .back-link{
+    color: #FFFFFF;
+    background-color: var(--danger);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    padding: 7px 14px;
+    border-radius: var(--r-sm);
+    box-shadow: 0 2px 6px rgba(239,68,68,0.25);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .back-link:hover{ background-color: #DC2626; transform: translateX(-3px); box-shadow: 0 4px 10px rgba(239,68,68,0.35); }
+  .back-link:active{ transform: scale(0.94); }
+
+  /* ===== RECENT LIST ===== */
+  .recent-box{margin-top:20px;}
+  .recent-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .recent-title{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.3px; text-transform: uppercase;}
+  .refresh-link{font-size:11px;color:var(--theme-main);font-weight:700;cursor:pointer; transition: opacity 0.2s;}
+  .refresh-link:hover{ opacity: 0.7; text-decoration: underline; }
+  .recent-row{
+    display:flex;align-items:center;gap:10px;
+    background:#FFFFFF; border:1.5px solid var(--border); border-left:4.5px solid var(--theme-main);
+    padding:12px 14px; margin-bottom:8px; font-size:12px; border-radius:var(--r-md); box-shadow: var(--shadow-sm);
+    animation: fadeSlideUp 0.35s ease; transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .recent-row:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .recent-info{flex:1;min-width:0;}
+  .recent-time{font-family:var(--mono);color:var(--theme-main);font-size:11px;font-weight:700;}
+  .recent-meta{color:var(--text);margin-top:3px;font-weight:600;}
+  .recent-nums{font-family:var(--mono);color:var(--muted);margin-top:3px;font-size:11px;word-break:break-word;}
+
+  .empty-state{text-align:center;padding:32px 12px;color:var(--muted);font-size:12.5px; font-weight: 500;}
+
+  /* ===== SPREADSHEET TABLE VIEW (MENU DATA) ===== */
+  .sheet-table-container{
+    width: 100%; background: #FFFFFF;
+    border: 1.5px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow-md);
+    margin-top: 12px; transition: all 0.3s ease; position: relative; overflow: hidden;
+  }
+  .sheet-table-container.fullscreen {
+    position: fixed !important; inset: 0 !important; z-index: 9999 !important;
+    border-radius: 0 !important; margin: 0 !important; width: 100vw !important; height: 100vh !important;
+    display: flex; flex-direction: column; background: #FFFFFF;
+  }
+  .sheet-table-header{ padding:14px 16px; font-size:13px; font-weight:800; color:var(--text); border-bottom:1.5px solid var(--border); display:flex; justify-content:space-between; align-items:center; background: var(--panel-2); flex-shrink: 0; }
+  .sheet-table-scroll { width: 100%; overflow: auto; flex: 1; }
+  .sheet-table { width: 100%; border-collapse: collapse; font-size: 11.5px; text-align: left; font-family: var(--sans); }
+  .sheet-table th, .sheet-table td { padding: 10px 10px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); white-space:nowrap; }
+  .sheet-table th { background: #E2E8F0; color: var(--text); font-weight: 800; font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; text-align:center; position: sticky; top: 0; z-index: 2; }
+  .sheet-table tr:last-child td { border-bottom: none; }
+  .sheet-table tr:hover td { background: var(--theme-light); }
+
+  .btn-fullscreen {
+    background: var(--theme-light); border: 1px solid var(--theme-dim); color: var(--theme-main);
+    font-size: 11.5px; font-weight: 700; padding: 5px 10px; border-radius: var(--r-sm); cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-fullscreen:hover { background: var(--theme-main); color: #FFF; }
+
+  /* Tombol X merah tabel */
+  .btn-danger-x-red {
+    background: var(--danger-light); border: 1px solid #FECACA; color: var(--danger);
+    width: 28px; height: 28px; font-size: 12.5px; font-weight: 800; border-radius: var(--r-sm);
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn-danger-x-red:hover { background: var(--danger); color: #FFF; transform: scale(1.1); box-shadow: 0 2px 6px rgba(239,68,68,0.3); }
+  .btn-danger-x-red:active { transform: scale(0.9); }
+
+  .ts-date { color: var(--success); font-weight: 800; font-family: var(--mono); margin-right: 6px; }
+  .ts-time { color: var(--theme-main); font-weight: 800; font-family: var(--mono); }
+
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#0F172A;border:1px solid #334155;color:#FFFFFF;
+    padding:12px 22px;font-size:13px;z-index:10000;box-shadow: var(--shadow-lg);
+    opacity:0;pointer-events:none;transition:all .3s cubic-bezier(0.16, 1, 0.3, 1); border-radius:var(--r-md);
+    max-width:90%;text-align:center; font-weight:600;
+  }
+  .toast.show{opacity:1;bottom:24px; transform:translateX(-50%) translateY(0);}
+  .toast.err{background:var(--danger);border-color:#DC2626;}
+
+  .install-btn{
+    display:none;align-items:center;gap:6px;
+    background:var(--theme-light);border:1px dashed var(--theme-main);color:var(--theme-main);
+    font-size:11.5px;padding:8px 12px;margin:12px 16px 0;cursor:pointer;border-radius:var(--r-sm);font-weight:700;
+  }
+  .install-btn.show{display:inline-flex;}
+
+  /* ===== CHART BOX ===== */
+  .chart-box{
+    margin-top:20px; background:#FFFFFF; border:1.5px solid var(--border); border-radius:var(--r-lg);
+    padding:16px; box-shadow: var(--shadow-md);
+  }
+  .chart-header{ margin-bottom:12px; }
+  .chart-header h3{ margin:0 0 2px; font-size:14px; font-weight:800; color:var(--text); }
+  .chart-sub{ font-size:11px; color:var(--muted); font-weight: 500; }
+  .chart-canvas-wrap{ position:relative; height:230px; }
+  .chart-empty{ text-align:center; color:var(--muted); font-size:12.5px; padding:40px 10px; }
+
+  /* ===== DASHBOARD ===== */
+  .filter-panel{
+    background:#FFFFFF; border:1.5px solid var(--border); border-radius:var(--r-lg); padding:16px;
+    box-shadow: var(--shadow-md); margin-bottom:16px;
+  }
+  .filter-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .filter-field label{ display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; }
+  .filter-field select, .filter-field input{
+    width:100%; background:#F8FAFC; border:1.5px solid var(--border); color:var(--text);
+    padding:9px 11px; font-size:13px; font-family:var(--sans); border-radius:var(--r-sm);
+    transition: all 0.2s ease;
+  }
+  .filter-field select:focus, .filter-field input:focus{ outline:none; border-color:var(--theme-main); background:#fff; box-shadow: 0 0 0 3px var(--theme-dim); }
+  .filter-footer{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); }
+  .filter-active-note{ font-size:11px; color:var(--theme-main); font-weight:700; }
+  .btn-reset{ background:none; border:1.5px solid var(--border); color:var(--muted); font-size:11.5px; font-weight:700; padding:6px 12px; border-radius:var(--r-sm); cursor:pointer; transition: all 0.2s; }
+  .btn-reset:hover{ border-color:var(--danger); color:var(--danger); background: var(--danger-light); }
+
+  .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+  .stat-card{
+    background:#FFFFFF; border:1.5px solid var(--border); border-left:4.5px solid var(--accent, var(--theme-main));
+    border-radius:var(--r-md); padding:14px; box-shadow: var(--shadow-sm);
+    animation: fadeSlideUp 0.35s ease; transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .stat-value{ font-family:var(--mono); font-size:21px; font-weight:800; color:var(--text); line-height:1.1; }
+  .stat-label{ font-size:11px; color:var(--muted); margin-top:4px; font-weight:700; }
+  .stat-card.total{ background:linear-gradient(135deg, var(--theme-main), var(--theme-main-hover)); border-left:none; grid-column: span 2; box-shadow: var(--shadow-md); }
+  .stat-card.total .stat-value, .stat-card.total .stat-label{ color:#FFFFFF; }
+  .stat-card.total .stat-label{ color:rgba(255,255,255,0.85); }
+
+  /* ===== MODAL HAPUS ===== */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter: blur(4px);
+    display:flex; align-items:center; justify-content:center; z-index:11000; padding:20px;
+    opacity:0; pointer-events:none; transition:opacity .2s ease;
+  }
+  .modal-overlay.show{ opacity:1; pointer-events:auto; }
+  .modal-box{
+    background:#FFFFFF; border-radius:var(--r-lg); padding:24px; max-width:330px; width:100%;
+    box-shadow:var(--shadow-lg); text-align:center; transform:scale(0.9); transition:transform .25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .modal-overlay.show .modal-box{ transform:scale(1); }
+  .modal-icon{
+    width:52px; height:52px; border-radius:50%; background:var(--danger-light); color:var(--danger);
+    display:flex; align-items:center; justify-content:center; font-size:24px; margin:0 auto 14px;
+  }
+  .modal-box h3{ margin:0 0 8px; font-size:16px; font-weight: 800; color:var(--text); }
+  .modal-desc{ font-size:12.5px; color:var(--muted); margin:0 0 14px; line-height:1.5; font-weight: 500; }
+  .modal-detail{
+    background:var(--panel-2); border:1px solid var(--border); border-radius:var(--r-sm);
+    padding:12px; margin-bottom:18px; text-align:left; font-size:12px; line-height:1.6;
+  }
+  .modal-detail b{ font-family:var(--mono); color:var(--theme-main); }
+  .modal-actions{ display:flex; gap:10px; }
+  .modal-actions button{ flex:1; padding:12px; border-radius:var(--r-sm); font-size:13.5px; font-weight:800; border:none; cursor:pointer; font-family:var(--sans); transition: all 0.2s; }
+  .btn-modal-cancel{ background:var(--panel-2); color:var(--text); border:1px solid var(--border) !important; }
+  .btn-modal-cancel:hover{ background:var(--border); }
+  .btn-modal-danger{ background:var(--danger); color:#FFFFFF; box-shadow: 0 4px 10px rgba(239,68,68,0.3); }
+  .btn-modal-danger:hover{ background:#DC2626; }
+</style>
+</head>
+<body class="theme-input">
+
+<div class="global-loader" id="globalLoader">
+  <div class="loader-card">
+    <div class="spinner"></div>
+    <span id="loaderText">Memproses...</span>
+  </div>
+</div>
+
+<div class="app-shell" id="appShellContainer">
+  <div class="topbar">
+    <div class="logo-frame">
+      <img src="https://res.cloudinary.com/vf5nikiz/image/upload/v1785164146/IMG_20260707_085722_slsyiz.jpg" alt="Logo">
+    </div>
+    <div class="brand-block">
+      <div class="brand-title">Input Stock Pallet</div>
+      <div class="brand-sub">NDC WAREHOUSE</div>
+    </div>
+    <div class="clock-block">
+      <div class="clock-time" id="clock-live">--:--:--</div>
+      <div class="clock-date" id="clock-date">--/--/----</div>
+    </div>
+    <div class="pic-block">
+      <div class="pic-photo" id="pic-photo">-</div>
+      <div class="pic-text">
+        <span class="pic-role">PIC</span>
+        <span class="pic-name">Handoko</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-tab="input">📥 Input</div>
+    <div class="nav-tab" data-tab="dashboard">📊 Dashboard</div>
+    <div class="nav-tab" data-tab="data">📋 Data</div>
+  </div>
+
+  <button class="install-btn" id="installBtn">⚡ Instal aplikasi ke layar utama</button>
+
+  <!-- ================= HALAMAN INPUT ================= -->
+  <div class="wrap" id="app-input">
+
+    <!-- Halaman Pilih Gudang -->
+    <div id="step-gudang" class="fade-in">
+      <div class="stepper"><span class="step-chip">Gudang</span><span class="step-arrow">›</span><span class="step-chip" style="opacity:.4">Shift</span><span class="step-arrow">›</span><span class="step-chip" style="opacity:.4">Zona</span></div>
+      <h2 class="section-title">Pilih Gudang</h2>
+      <div class="marquee-box"><div class="marquee-content">PASTIKAN SELALU INPUT DI AKHIR SHIFT SETELAH PEKERJAAN SELESAI</div></div>
+      <p class="section-hint">Pilih lokasi gudang untuk memulai input stock pallet.</p>
+      
+      <div class="choice-grid" id="gudang-grid"></div>
+    </div>
+
+    <!-- Halaman Pilih Shift -->
+    <div id="step-shift" style="display:none">
+      <div class="back-row"><span class="back-link" data-back="gudang">‹ Ganti Gudang</span></div>
+      <div class="stepper" id="stepper-shift"></div>
+      <h2 class="section-title">Pilih Shift</h2>
+      <p class="section-hint">Gudang: <b id="shift-gudang-label"></b></p>
+      <div class="choice-grid" id="shift-grid"></div>
+    </div>
+
+    <!-- Halaman Pilih Zona -->
+    <div id="step-zona" style="display:none">
+      <div class="back-row"><span class="back-link" data-back="shift">‹ Ganti Shift</span></div>
+      <div class="stepper" id="stepper-zona"></div>
+      <h2 class="section-title">Pilih Zona</h2>
+      <div class="choice-grid" id="zona-grid"></div>
+    </div>
+
+    <!-- Halaman Form Input -->
+    <div id="step-form" style="display:none">
+      <div class="back-row"><span class="back-link" data-back="zona">‹ Ganti Zona</span></div>
+      <div class="stepper" id="stepper-form"></div>
+      <h2 class="section-title">Input Data</h2>
+      <p class="section-hint">Isi form sesuai kondisi lapangan.</p>
+
+      <div class="auto-fields">
+        <div class="field"><label>Timestamp</label><input type="text" id="f-timestamp" readonly style="color:var(--theme-main); font-weight:800; font-family:var(--mono);"></div>
+        <div class="field"><label>Gudang</label><input type="text" id="f-gudang" readonly></div>
+        <div class="field"><label>Shift</label><input type="text" id="f-shift" readonly></div>
+        <div class="field"><label>Zona</label><input type="text" id="f-zona" readonly></div>
+      </div>
+
+      <div class="form-panel">
+        <div class="field"><label>Kayu PTI/JPS</label><input type="text" inputmode="numeric" id="f-e" placeholder="0"></div>
+        <div class="field"><label>Plastik Grey</label><input type="text" inputmode="numeric" id="f-f" placeholder="0"></div>
+        <div class="field"><label>Plastik Hitam Tebal</label><input type="text" inputmode="numeric" id="f-g" placeholder="0"></div>
+        <div class="field"><label>Plastik Hitam One Way</label><input type="text" inputmode="numeric" id="f-h" placeholder="0"></div>
+        <div class="field"><label>Kayu Loscam</label><input type="text" inputmode="numeric" id="f-i" placeholder="0"></div>
+        <div class="field"><label>Dedicated DC</label><input type="text" inputmode="numeric" id="f-j" placeholder="0"></div>
+        <div class="field"><label>Pallet Tidak Standar</label><input type="text" id="f-k" placeholder="angka atau keterangan"></div>
+        <div class="field"><label>Tanggal Shift Masuk</label><input type="date" id="f-l"></div>
+        
+        <button class="btn-submit-sheet" id="submitBtn">
+          <span>💾</span> Simpan ke Spreadsheet
+        </button>
+      </div>
+
+      <div class="recent-box">
+        <div class="recent-title-row">
+          <div class="recent-title">INPUT TERAKHIR · <span id="recent-gudang-label"></span></div>
+          <span class="refresh-link" id="refreshRecent">Muat ulang</span>
+        </div>
+        <div id="recent-list"><div class="empty-state">Memuat data...</div></div>
+      </div>
+
+      <div class="chart-box">
+        <div class="chart-header">
+          <h3>Grafik Total per Jenis Pallet</h3>
+          <span class="chart-sub">Akumulasi seluruh data · <span id="chartGudangLabel"></span></span>
+        </div>
+        <div class="chart-canvas-wrap"><canvas id="typeChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HALAMAN DASHBOARD ================= -->
+  <div class="wrap" id="app-dashboard" style="display:none">
+    <h2 class="section-title">Rekap Daily Report (all Shift)</h2>
+    <p class="section-hint">Atur filter di bawah — total setiap jenis pallet akan otomatis terjumlah.</p>
+
+    <div class="filter-panel">
+      <div class="filter-grid">
+        <div class="filter-field">
+          <label>Gedung</label>
+          <select id="fl-gudang"><option value="">Semua Gedung</option></select>
+        </div>
+        <div class="filter-field">
+          <label>Shift</label>
+          <select id="fl-shift"><option value="">Semua Shift</option></select>
+        </div>
+        <div class="filter-field">
+          <label>Zona</label>
+          <select id="fl-zona"><option value="">Semua Zona</option></select>
+        </div>
+        <div class="filter-field">
+          <label>Jenis Pallet</label>
+          <select id="fl-jenis"><option value="">Semua Jenis</option></select>
+        </div>
+        <div class="filter-field" style="grid-column:span 2;">
+          <label>Tanggal Shift Masuk</label>
+          <input type="date" id="fl-tanggal">
+        </div>
+      </div>
+      <div class="filter-footer">
+        <span class="filter-active-note" id="filterActiveNote">Menampilkan semua data</span>
+        <button class="btn-reset" id="flReset">Reset Filter</button>
+      </div>
+    </div>
+
+    <div class="stat-grid" id="statGrid"></div>
+  </div>
+
+  <!-- ================= HALAMAN DATA ================= -->
+  <div class="wrap" id="app-data" style="display:none">
+    <h2 class="section-title">Data Spreadsheet Stock Pallet</h2>
+    <p class="section-hint">Menampilkan seluruh data secara langsung sesuai kolom pada Google Sheets.</p>
+
+    <div class="sheet-table-container" id="sheetTableContainer">
+      <div class="sheet-table-header">
+        <span>Total: <span id="sheetRowCount">0</span> baris</span>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span class="refresh-link" id="refreshSheetData">Muat Ulang</span>
+          <button class="btn-fullscreen" id="toggleFullscreenBtn" onclick="toggleFullscreenTable()">⛶ Perbesar</button>
+        </div>
+      </div>
+      <div class="sheet-table-scroll">
+        <table class="sheet-table" id="sheetTable">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Gudang</th>
+              <th>Shift</th>
+              <th>Zona</th>
+              <th>Kayu PTI/JPS</th>
+              <th>Plastik Grey</th>
+              <th>Plastik Hitam Tebal</th>
+              <th>Plastik Hitam One Way</th>
+              <th>Kayu Loscam</th>
+              <th>Dedicated DC</th>
+              <th>Pallet Tidak Standar</th>
+              <th>Tanggal Shift Masuk</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="sheetTableBody">
+            <tr><td colspan="13" class="empty-state">Memuat data dari spreadsheet...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL KONFIRMASI HAPUS ================= -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-icon">⚠️</div>
+    <h3>Hapus Data Ini?</h3>
+    <p class="modal-desc">Tindakan ini <b>tidak bisa dibatalkan</b>. Data akan terhapus permanen dari spreadsheet.</p>
+    <div class="modal-detail" id="modalDetail"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" id="modalCancel">Batal</button>
+      <button class="btn-modal-danger" id="modalConfirm">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+/* ================== CONFIG ================== */
+const CONFIG = {
+  WEBAPP_URL: "https://script.google.com/macros/s/AKfycbygOft223PAePGCW52fzB_oojqLjHOKjCZA2rZvlZmctItK9Z_-VzRciuG005FA_338nw/exec",
+  LOGO_URL: "https://res.cloudinary.com/vf5nikiz/image/upload/v1785164146/IMG_20260707_085722_slsyiz.jpg",
+  PIC_PHOTO_URL: "",
+  SHEET_ID: "1XB6nZCxPxBvNmkF5LdcVKFJHkrRZ22CSuYjL5J7pvGs",
+  SHEET_GID: "710058347"
+};
+const GVIZ_BASE = "https://docs.google.com/spreadsheets/d/" + CONFIG.SHEET_ID + "/gviz/tq?gid=" + CONFIG.SHEET_GID + "&headers=1&range=A:L&tqx=out:json";
+
+const GUDANG_LIST = ["JATAKE 3","JATAKE 6","POLI UNGGUL","TELESONIK"];
+const SHIFT_LIST = ["Shift 1","Shift 2","Shift 3"];
+const ZONA_LIST = ["Inbound","Picker","Packer","Loading"];
+
+const CATS = [
+  {key:"e", label:"Kayu PTI/JPS", color:"#2563EB"},
+  {key:"f", label:"Plastik Grey", color:"#0891B2"},
+  {key:"g", label:"Plastik Hitam Tebal", color:"#7C3AED"},
+  {key:"h", label:"Plastik Hitam One Way", color:"#DB2777"},
+  {key:"i", label:"Kayu Loscam", color:"#D97706"},
+  {key:"j", label:"Dedicated DC", color:"#059669"}
+];
+
+let state = { gudang:null, shift:null, zona:null };
+let filters = { gudang:"", shift:"", zona:"", jenis:"", tanggal:"" };
+let cachedData = null;
+let typeChartInstance = null;
+let pendingDelete = null;
+
+/* ================== LOADING OVERLAY ================== */
+function showLoader(text = "Memproses..."){
+  document.getElementById('loaderText').textContent = text;
+  document.getElementById('globalLoader').classList.add('active');
+}
+function hideLoader(){
+  document.getElementById('globalLoader').classList.remove('active');
+}
+function flashLoader(text, ms, fn){
+  showLoader(text);
+  setTimeout(()=>{ fn(); hideLoader(); }, ms || 180);
+}
+
+if(CONFIG.PIC_PHOTO_URL){
+  document.getElementById('pic-photo').innerHTML = '<img src="'+CONFIG.PIC_PHOTO_URL+'" alt="Handoko">';
+}
+
+/* ================== CLOCK ================== */
+function pad(n){return n.toString().padStart(2,'0');}
+function tickClock(){
+  const d = new Date();
+  const hh=pad(d.getHours()), mm=pad(d.getMinutes()), ss=pad(d.getSeconds());
+  const dateStr = pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear();
+  document.getElementById('clock-live').textContent = hh+':'+mm+':'+ss;
+  document.getElementById('clock-date').textContent = dateStr;
+}
+tickClock(); setInterval(tickClock,1000);
+
+/* ================== NAV TABS (PENGATURAN TEMA WARNA) ================== */
+document.querySelectorAll('.nav-tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const tab = t.dataset.tab;
+
+    document.body.className = '';
+    if(tab==='input') document.body.classList.add('theme-input');
+    if(tab==='dashboard') document.body.classList.add('theme-dashboard');
+    if(tab==='data') document.body.classList.add('theme-data');
+
+    document.getElementById('app-input').style.display = tab==='input' ? '' : 'none';
+    document.getElementById('app-dashboard').style.display = tab==='dashboard' ? '' : 'none';
+    document.getElementById('app-data').style.display = tab==='data' ? '' : 'none';
+
+    const activeWrap = document.querySelector('.wrap:not([style*="display: none"])');
+    if(activeWrap){
+      activeWrap.classList.remove('fade-in'); void activeWrap.offsetWidth; activeWrap.classList.add('fade-in');
+    }
+    
+    if(tab==='dashboard') openDashboard();
+    if(tab==='data') loadSpreadsheetDataView(true);
+  });
+});
+
+/* ================== BUILD GRIDS TANPA IKON GEDUNG ================== */
+function buildGrid(container, items, onClick){
+  container.innerHTML = '';
+  items.forEach((label)=>{
+    const b = document.createElement('button');
+    b.className = 'choice-btn';
+    b.textContent = label;
+    b.addEventListener('click', ()=>onClick(label));
+    container.appendChild(b);
+  });
+}
+buildGrid(document.getElementById('gudang-grid'), GUDANG_LIST, (g)=>{
+  state.gudang = g;
+  document.getElementById('shift-gudang-label').textContent = g;
+  goStep('shift');
+});
+
+function stepperHTML(activeIdx){
+  const labels = ['Gudang','Shift','Zona'];
+  const vals = [state.gudang, state.shift, state.zona];
+  return labels.map((l,i)=>{
+    const filled = vals[i] ? vals[i] : l;
+    const cls = i < activeIdx ? 'step-chip done' : 'step-chip';
+    return '<span class="'+cls+'">'+filled+'</span>' + (i<2 ? '<span class="step-arrow">›</span>' : '');
+  }).join('');
+}
+
+function goStep(step){
+  ['gudang','shift','zona','form'].forEach(s=>{
+    document.getElementById('step-'+s).style.display = s===step ? '' : 'none';
+  });
+  const activeEl = document.getElementById('step-'+step);
+  activeEl.classList.remove('fade-in'); void activeEl.offsetWidth; activeEl.classList.add('fade-in');
+
+  if(step==='shift'){
+    document.getElementById('stepper-shift').innerHTML = stepperHTML(0);
+    buildGrid(document.getElementById('shift-grid'), SHIFT_LIST, (s)=>{
+      state.shift = s; goStep('zona');
+    });
+  }
+  if(step==='zona'){
+    document.getElementById('stepper-zona').innerHTML = stepperHTML(1);
+    buildGrid(document.getElementById('zona-grid'), ZONA_LIST, (z)=>{
+      state.zona = z; openForm();
+    });
+  }
+}
+
+document.querySelectorAll('[data-back]').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    const target = el.dataset.back;
+    if(target==='gudang'){ state.shift=null; state.zona=null; goStep('gudang'); }
+    if(target==='shift'){ state.zona=null; goStep('shift'); }
+    if(target==='zona'){ goStep('zona'); }
+  });
+});
+
+/* ================== FORM ================== */
+function nowTimestampStr(){
+  const d = new Date();
+  return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+}
+function todayDateInput(){
+  const d = new Date();
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+function openForm(){
+  document.getElementById('stepper-form').innerHTML = stepperHTML(2);
+  document.getElementById('f-timestamp').value = nowTimestampStr();
+  document.getElementById('f-gudang').value = state.gudang;
+  document.getElementById('f-shift').value = state.shift;
+  document.getElementById('f-zona').value = state.zona;
+  ['e','f','g','h','i','j','k'].forEach(k=>document.getElementById('f-'+k).value='');
+  document.getElementById('f-l').value = todayDateInput();
+  document.getElementById('recent-gudang-label').textContent = state.gudang;
+  document.getElementById('chartGudangLabel').textContent = state.gudang;
+  goStep('form');
+  loadInputPageData(true);
+}
+
+document.getElementById('submitBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('submitBtn');
+  const payload = {
+    action:'add',
+    timestamp: nowTimestampStr(),
+    gudang: state.gudang,
+    shift: state.shift,
+    zona: state.zona,
+    e: document.getElementById('f-e').value,
+    f: document.getElementById('f-f').value,
+    g: document.getElementById('f-g').value,
+    h: document.getElementById('f-h').value,
+    i: document.getElementById('f-i').value,
+    j: document.getElementById('f-j').value,
+    k: document.getElementById('f-k').value,
+    l: formatDateForSheet(document.getElementById('f-l').value)
+  };
+  btn.disabled = true;
+  showLoader('Menyimpan data...');
+  try{
+    await apiCall(payload);
+    showToast('Data berhasil disimpan.');
+    document.getElementById('f-timestamp').value = nowTimestampStr();
+    ['e','f','g','h','i','j','k'].forEach(k=>document.getElementById('f-'+k).value='');
+    await loadInputPageData(true);
+  }catch(err){
+    showToast('Gagal menyimpan: '+err.message, true);
+  }
+  hideLoader();
+  btn.disabled = false;
+});
+
+function formatDateForSheet(isoDate){
+  if(!isoDate) return '';
+  const [y,m,d] = isoDate.split('-');
+  return d+'/'+m+'/'+y;
+}
+function parseDMYtoISO(s){
+  if(!s) return '';
+  const parts = String(s).split('/');
+  if(parts.length!==3) return '';
+  const [d,m,y] = parts;
+  return y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+}
+
+/* ================== API GOOGLE APPS SCRIPT ================== */
+async function apiCall(payload){
+  const res = await fetch(CONFIG.WEBAPP_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  });
+  const json = await res.json();
+  if(!json.ok) throw new Error(json.error || 'Unknown error');
+  return json;
+}
+
+async function fetchAll(forceRefresh = false){
+  if(cachedData && !forceRefresh) return cachedData;
+  try{
+    const url = GVIZ_BASE + '&_ts=' + Date.now();
+    const res = await fetch(url);
+    const text = await res.text();
+    const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?\s*$/);
+    if(!match) throw new Error('Format respons Sheets tidak dikenali');
+    const json = JSON.parse(match[1]);
+    const rawRows = (json.table && json.table.rows) ? json.table.rows : [];
+
+    const getVal = (cells, i) => {
+      const cell = cells[i];
+      if(!cell || cell.v === null || cell.v === undefined) return '';
+      return cell.v;
+    };
+
+    cachedData = rawRows.map((r, idx) => {
+      const c = r.c || [];
+      return {
+        rowIndex: idx + 2,
+        timestamp: getVal(c,0),
+        gudang: getVal(c,1),
+        shift: getVal(c,2),
+        zona: getVal(c,3),
+        e: getVal(c,4), f: getVal(c,5), g: getVal(c,6),
+        h: getVal(c,7), i: getVal(c,8), j: getVal(c,9),
+        k: getVal(c,10), l: getVal(c,11)
+      };
+    }).filter(r => r.timestamp !== '');
+
+    return cachedData;
+  }catch(e){
+    console.error(e);
+    showToast('Gagal memuat data dari Sheets.', true);
+    return cachedData || [];
+  }
+}
+
+/* ================== MODAL HAPUS ================== */
+function openDeleteModal(row, btnEl){
+  pendingDelete = { row, btnEl };
+  document.getElementById('modalDetail').innerHTML =
+    '<div><b>'+row.timestamp+'</b></div>'+
+    '<div>Gedung: <b>'+row.gudang+'</b></div>'+
+    '<div>Shift '+row.shift+' · Zona '+row.zona+'</div>';
+  document.getElementById('deleteModal').classList.add('show');
+}
+function closeDeleteModal(){
+  document.getElementById('deleteModal').classList.remove('show');
+  pendingDelete = null;
+}
+document.getElementById('modalCancel').addEventListener('click', closeDeleteModal);
+document.getElementById('deleteModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'deleteModal') closeDeleteModal();
+});
+document.getElementById('modalConfirm').addEventListener('click', async ()=>{
+  if(!pendingDelete) return;
+  const { row, btnEl } = pendingDelete;
+  closeDeleteModal();
+  await deleteRow(row.rowIndex, row.timestamp, btnEl);
+});
+
+async function deleteRow(rowIndex, timestamp, btnEl){
+  if(btnEl) btnEl.disabled = true;
+  showLoader('Menghapus data...');
+  try{
+    await apiCall({action:'delete', rowIndex: Number(rowIndex), timestamp: String(timestamp)});
+    await loadInputPageData(true);
+    if(document.getElementById('app-dashboard').style.display !== 'none') await runDashboardFilter(true);
+    if(document.getElementById('app-data').style.display !== 'none') await loadSpreadsheetDataView(true);
+    showToast('Input dihapus.');
+  }catch(err){
+    showToast('Gagal menghapus: '+err.message, true);
+  }
+  hideLoader();
+  if(btnEl) btnEl.disabled = false;
+}
+
+/* ================== RECENT LIST + CHART ================== */
+async function loadInputPageData(forceRefresh){
+  const el = document.getElementById('recent-list');
+  el.innerHTML = '<div class="empty-state">Memuat data...</div>';
+  const rowsData = await fetchAll(forceRefresh);
+  renderRecent(rowsData);
+  renderTypeChart(rowsData.filter(r=>r.gudang===state.gudang));
+}
+document.getElementById('refreshRecent').addEventListener('click', ()=>loadInputPageData(true));
+
+function renderRecent(rowsData){
+  const el = document.getElementById('recent-list');
+  const rows = rowsData.filter(r=>r.gudang===state.gudang).slice(-5).reverse();
+  if(rows.length===0){ el.innerHTML = '<div class="empty-state">Belum ada input untuk gudang ini.</div>'; return; }
+  el.innerHTML = '';
+  rows.forEach(r=>{
+    const row = document.createElement('div');
+    row.className = 'recent-row';
+    row.innerHTML = '<div class="recent-info">'+
+      '<div class="recent-time">'+r.timestamp+'</div>'+
+      '<div class="recent-meta">'+r.shift+' · '+r.zona+'</div>'+
+      '<div class="recent-nums">PTI/JPS:'+nz(r.e)+' | Grey:'+nz(r.f)+' | Ht.Tebal:'+nz(r.g)+'</div>'+
+      '</div>';
+    const x = document.createElement('button');
+    x.className = 'btn-danger-x-red'; x.textContent = '✕';
+    x.addEventListener('click', ()=>openDeleteModal(r, x));
+    row.appendChild(x);
+    el.appendChild(row);
+  });
+}
+function nz(v){ return (v===undefined||v===null||v==='') ? '-' : v; }
+
+function renderTypeChart(rows){
+  const wrap = document.querySelector('#app-input .chart-canvas-wrap');
+  if(rows.length===0){
+    if(typeChartInstance){ typeChartInstance.destroy(); typeChartInstance = null; }
+    wrap.innerHTML = '<div class="chart-empty">Belum ada data untuk gudang ini.</div>';
+    return;
+  }
+  if(!document.getElementById('typeChart')){
+    wrap.innerHTML = '<canvas id="typeChart"></canvas>';
+  }
+  const totals = CATS.map(c => rows.reduce((s,r)=> s + (parseFloat(r[c.key])||0), 0));
+  const labels = CATS.map(c=>c.label);
+  const colors = CATS.map(c=>c.color);
+  const ctx = document.getElementById('typeChart').getContext('2d');
+
+  if(typeChartInstance){
+    typeChartInstance.data.labels = labels;
+    typeChartInstance.data.datasets[0].data = totals;
+    typeChartInstance.data.datasets[0].backgroundColor = colors;
+    typeChartInstance.data.datasets[1].data = totals;
+    typeChartInstance.update();
+    return;
+  }
+  typeChartInstance = new Chart(ctx, {
+    data: {
+      labels,
+      datasets: [
+        { type:'bar', label:'Total', data: totals, backgroundColor: colors, borderRadius:6, order:2, maxBarThickness:34 },
+        { type:'line', label:'Tren', data: totals, borderColor:'#0F172A', backgroundColor:'rgba(15,23,42,0.08)', tension:.35, borderWidth:2, pointRadius:4, pointBackgroundColor:'#0F172A', fill:false, order:1 }
+      ]
+    },
+    options: {
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:10}, padding:12 } },
+        tooltip:{ mode:'index', intersect:false }
+      },
+      scales:{
+        x:{ ticks:{ font:{size:9}, maxRotation:35, minRotation:0 }, grid:{ display:false } },
+        y:{ beginAtZero:true, ticks:{ font:{size:10} } }
+      }
+    }
+  });
+}
+
+/* ================== FORMAT TIMESTAMP ================== */
+function formatTimestampDisplay(raw){
+  if(!raw) return '-';
+  const match = String(raw).match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
+  if(match){
+    const y = match[1];
+    const m = pad(parseInt(match[2]) + 1);
+    const day = pad(match[3]);
+    const h = pad(match[4]);
+    const min = pad(match[5]);
+    const s = pad(match[6]);
+    return `<span class="ts-date">${day}/${m}/${y}</span><span class="ts-time">${h}:${min}:${s}</span>`;
+  }
+  return raw;
+}
+
+/* ================== MENU DATA ================== */
+async function loadSpreadsheetDataView(forceRefresh){
+  showLoader('Memuat data spreadsheet...');
+  const rows = await fetchAll(forceRefresh);
+  const tbody = document.getElementById('sheetTableBody');
+  document.getElementById('sheetRowCount').textContent = rows.length;
+
+  if(rows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="13" class="empty-state">Belum ada data tersimpan di spreadsheet.</td></tr>';
+    hideLoader();
+    return;
+  }
+
+  const sorted = [...rows].reverse();
+  tbody.innerHTML = sorted.map(r => `
+    <tr>
+      <td style="white-space:nowrap;">${formatTimestampDisplay(r.timestamp)}</td>
+      <td><b>${r.gudang || '-'}</b></td>
+      <td>${r.shift || '-'}</td>
+      <td>${r.zona || '-'}</td>
+      <td>${nz(r.e)}</td>
+      <td>${nz(r.f)}</td>
+      <td>${nz(r.g)}</td>
+      <td>${nz(r.h)}</td>
+      <td>${nz(r.i)}</td>
+      <td>${nz(r.j)}</td>
+      <td>${nz(r.k)}</td>
+      <td>${r.l || '-'}</td>
+      <td style="text-align:center;">
+        <button class="btn-danger-x-red" style="margin:0 auto;" onclick="openDeleteModalFromData(${r.rowIndex}, '${r.timestamp}', '${r.gudang}')">✕</button>
+      </td>
+    </tr>
+  `).join('');
+  hideLoader();
+}
+
+function openDeleteModalFromData(rowIndex, timestamp, gudang){
+  openDeleteModal({ rowIndex, timestamp, gudang, shift:'', zona:'' });
+}
+
+document.getElementById('refreshSheetData').addEventListener('click', ()=>loadSpreadsheetDataView(true));
+
+function toggleFullscreenTable(){
+  const container = document.getElementById('sheetTableContainer');
+  const btn = document.getElementById('toggleFullscreenBtn');
+  container.classList.toggle('fullscreen');
+  if(container.classList.contains('fullscreen')){
+    btn.textContent = '✕ Tutup';
+  } else {
+    btn.textContent = '⛶ Perbesar';
+  }
+}
+
+/* ================== DASHBOARD ================== */
+function populateFilterSelects(){
+  const fill = (id, list) => {
+    const sel = document.getElementById(id);
+    list.forEach(v=>{
+      const opt = document.createElement('option');
+      opt.value = v; opt.textContent = v;
+      sel.appendChild(opt);
+    });
+  };
+  fill('fl-gudang', GUDANG_LIST);
+  fill('fl-shift', SHIFT_LIST);
+  fill('fl-zona', ZONA_LIST);
+  fill('fl-jenis', CATS.map(c=>c.label));
+  document.getElementById('fl-jenis').querySelectorAll('option').forEach((opt,idx)=>{
+    if(idx>0) opt.value = CATS[idx-1].key;
+  });
+}
+populateFilterSelects();
+
+['fl-gudang','fl-shift','fl-zona','fl-jenis'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', (e)=>{
+    const map = {'fl-gudang':'gudang','fl-shift':'shift','fl-zona':'zona','fl-jenis':'jenis'};
+    filters[map[id]] = e.target.value;
+    flashLoader('Menghitung ulang...', 180, ()=>runDashboardFilter(false));
+  });
+});
+document.getElementById('fl-tanggal').addEventListener('change', (e)=>{
+  filters.tanggal = e.target.value;
+  flashLoader('Menghitung ulang...', 180, ()=>runDashboardFilter(false));
+});
+document.getElementById('flReset').addEventListener('click', ()=>{
+  filters = { gudang:"", shift:"", zona:"", jenis:"", tanggal:"" };
+  document.getElementById('fl-gudang').value = "";
+  document.getElementById('fl-shift').value = "";
+  document.getElementById('fl-zona').value = "";
+  document.getElementById('fl-jenis').value = "";
+  document.getElementById('fl-tanggal').value = "";
+  flashLoader('Mereset filter...', 180, ()=>runDashboardFilter(false));
+});
+
+async function openDashboard(){
+  showLoader('Memuat dashboard...');
+  await fetchAll(true);
+  runDashboardFilter(false);
+  hideLoader();
+}
+
+async function runDashboardFilter(forceRefresh){
+  const rows = await fetchAll(forceRefresh);
+  const filtered = applyFilters(rows);
+  renderStatGrid(filtered);
+  updateFilterNote();
+}
+
+function applyFilters(rows){
+  return rows.filter(r=>{
+    if(filters.gudang && r.gudang !== filters.gudang) return false;
+    if(filters.shift && r.shift !== filters.shift) return false;
+    if(filters.zona && r.zona !== filters.zona) return false;
+    if(filters.tanggal){
+      if(parseDMYtoISO(r.l) !== filters.tanggal) return false;
+    }
+    return true;
+  });
+}
+
+function updateFilterNote(){
+  const active = [];
+  if(filters.gudang) active.push(filters.gudang);
+  if(filters.shift) active.push(filters.shift);
+  if(filters.zona) active.push(filters.zona);
+  if(filters.jenis) active.push(CATS.find(c=>c.key===filters.jenis).label);
+  if(filters.tanggal) active.push(filters.tanggal.split('-').reverse().join('/'));
+  document.getElementById('filterActiveNote').textContent = active.length
+    ? 'Filter aktif: ' + active.join(' · ')
+    : 'Menampilkan semua data';
+}
+
+function renderStatGrid(rows){
+  const grid = document.getElementById('statGrid');
+  const activeCats = filters.jenis ? CATS.filter(c=>c.key===filters.jenis) : CATS;
+  grid.innerHTML = '';
+  let grandTotal = 0;
+  activeCats.forEach(c=>{
+    const total = rows.reduce((s,r)=>s+(parseFloat(r[c.key])||0),0);
+    grandTotal += total;
+    const card = document.createElement('div');
+    card.className = 'stat-card';
+    card.style.setProperty('--accent', c.color);
+    card.innerHTML = '<div class="stat-value">'+total.toLocaleString('id-ID')+'</div>'+
+      '<div class="stat-label">'+c.label+'</div>';
+    grid.appendChild(card);
+  });
+  const totalCard = document.createElement('div');
+  totalCard.className = 'stat-card total';
+  totalCard.innerHTML = '<div class="stat-value">'+grandTotal.toLocaleString('id-ID')+'</div>'+
+    '<div class="stat-label">Total'+(filters.jenis ? ' (Jenis Terpilih)' : ' Semua Jenis')+'</div>';
+  grid.appendChild(totalCard);
+}
+
+/* ================== TOAST ================== */
+function showToast(msg, isErr){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr ? ' err' : '');
+  setTimeout(()=>{ t.className = 'toast'; }, 3000);
+}
+
+/* ================== PWA MANIFEST ================== */
+const manifest = {
+  name: "Input Stock Pallet",
+  short_name: "Stock Pallet",
+  start_url: ".",
+  display: "standalone",
+  background_color: "#F8FAFC",
+  theme_color: "#2563EB",
+  icons: [
+    {src: CONFIG.LOGO_URL, sizes:"192x192", type:"image/jpeg"},
+    {src: CONFIG.LOGO_URL, sizes:"512x512", type:"image/jpeg"}
+  ]
+};
+try{
+  const manifestBlob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
+}catch(e){}
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBtn').classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click', async ()=>{
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('installBtn').classList.remove('show');
+});
+</script>
+</body>
+</html>
