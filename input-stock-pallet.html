@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2563EB">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stock Pallet">
+<link rel="apple-touch-icon" href="https://res.cloudinary.com/vf5nikiz/image/upload/v1785164146/IMG_20260707_085722_slsyiz.jpg">
+<link id="manifest-link" rel="manifest">
+<title>Input Stock Pallet</title>
+<style>
+  :root{
+    --bg:#F8FAFC;
+    --panel:#FFFFFF;
+    --panel-2:#F1F5F9;
+    --border:#E2E8F0;
+    --primary:#2563EB;
+    --primary-hover:#1D4ED8;
+    --primary-light:#EFF6FF;
+    --primary-dim:#BFDBFE;
+    --text:#1E293B;
+    --muted:#64748B;
+    --danger:#EF4444;
+    --success:#10B981;
+    --mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --sans: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);width:100%;overflow-x:hidden;}
+  body{min-height:100vh;padding-bottom:50px;}
+  ::selection{background:var(--primary);color:#FFFFFF;}
+
+  /* ===== ADAPTIVE CONTAINER (MOBILE & LAPTOP) ===== */
+  .app-shell{
+    max-width:480px;
+    margin:0 auto;
+    width:100%;
+    min-height:100vh;
+    background:var(--bg);
+    position:relative;
+    box-shadow: 0 0 24px rgba(0,0,0,0.04);
+  }
+  @media(min-width: 768px){
+    .app-shell{
+      max-width:768px;
+      border-left:1px solid var(--border);
+      border-right:1px solid var(--border);
+    }
+  }
+
+  /* ===== GLOBAL LOADING OVERLAY ===== */
+  .global-loader {
+    position: fixed; inset: 0; background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(2px); z-index: 999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; font-weight: 600; color: var(--primary); font-size: 13px;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+  }
+  .global-loader.active { opacity: 1; pointer-events: auto; }
+  .spinner {
+    width: 32px; height: 32px; border: 3px solid var(--primary-dim);
+    border-top-color: var(--primary); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== TOP BAR ===== */
+  .topbar{
+    display:flex;align-items:center;gap:8px;
+    padding:8px 12px;
+    background:#FFFFFF;
+    border-bottom:1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    position:sticky;top:0;z-index:50;
+  }
+  .logo-frame{
+    width:90px;height:24px;
+    border:1px solid var(--border);
+    background:#FFFFFF;
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    border-radius:4px;
+  }
+  .logo-frame img{width:100%;height:100%;object-fit:contain;display:block;}
+
+  .brand-block{display:flex;flex-direction:column;flex:1;min-width:0;}
+  .brand-title{font-size:12px;font-weight:700;letter-spacing:.2px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+  .brand-sub{font-family:var(--mono);font-size:9.5px;color:var(--primary);letter-spacing:.5px;font-weight:600;}
+
+  .clock-block{
+    text-align:right;flex-shrink:0;padding-left:6px;border-left:1px solid var(--border);
+  }
+  .clock-time{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--primary);line-height:1.1;}
+  .clock-date{font-family:var(--mono);font-size:8.5px;color:var(--muted);}
+
+  .pic-block{display:flex;align-items:center;gap:6px;flex-shrink:0;padding-left:6px;border-left:1px solid var(--border);}
+  .pic-photo{
+    width:30px;height:30px;border-radius:50%;
+    border:2px solid var(--primary-dim);
+    background:var(--panel-2);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);color:var(--muted);font-size:11px;font-weight:700;
+    overflow:hidden;flex-shrink:0;
+  }
+  .pic-photo img{width:100%;height:100%;object-fit:cover;}
+  .pic-text{display:flex;flex-direction:column;line-height:1.15;}
+  .pic-role{font-size:8px;letter-spacing:.5px;color:var(--muted);font-weight:600;}
+  .pic-name{font-size:11px;font-weight:700;}
+
+  .wrap{padding:14px;}
+
+  /* ===== BREADCRUMB / STEPPER ===== */
+  .stepper{display:flex;align-items:center;gap:4px;margin-bottom:14px;font-family:var(--mono);font-size:10.5px;flex-wrap:wrap;}
+  .step-chip{padding:3px 8px;border:1px solid var(--border);background:#FFFFFF;color:var(--muted);border-radius:4px;}
+  .step-chip.done{color:var(--primary);border-color:var(--primary-dim);background:var(--primary-light);cursor:pointer;}
+  .step-arrow{color:var(--muted);}
+
+  h2.section-title{font-size:14px;font-weight:700;margin:0 0 3px;letter-spacing:.2px;color:var(--text);}
+  p.section-hint{font-size:11.5px;color:var(--muted);margin:0 0 14px;}
+
+  /* ===== SELECT GRID (Gudang/Shift/Zona) ===== */
+  .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .choice-btn{
+    position:relative;
+    background:#FFFFFF;
+    border:1px solid var(--border);
+    padding:16px 10px;
+    text-align:left;
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:13px;font-weight:700;
+    cursor:pointer;
+    border-radius:8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    transition: all 0.15s ease;
+  }
+  .choice-btn:hover{border-color:var(--primary-dim);background:var(--primary-light);}
+  .choice-btn:active{transform:scale(0.98);}
+  .choice-btn .cb-tag{display:block;font-family:var(--mono);font-size:9.5px;color:var(--primary);margin-bottom:4px;letter-spacing:1px;}
+
+  /* ===== FORM ===== */
+  .form-panel{background:#FFFFFF;border:1px solid var(--border);padding:14px;border-radius:8px;box-shadow: 0 1px 3px rgba(0,0,0,0.04);}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:4px;}
+  .field label .col-letter{font-family:var(--mono);color:var(--primary);margin-right:4px;}
+  .field input, .field select{
+    width:100%;background:#F8FAFC;border:1px solid var(--border);color:var(--text);
+    padding:9px 10px;font-size:13px;font-family:var(--sans);border-radius:6px;
+  }
+  .field input:focus, .field select:focus{outline:none;border-color:var(--primary);background:#FFFFFF;box-shadow: 0 0 0 3px rgba(37,99,235,0.1);}
+  .auto-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+  .auto-fields .field input[readonly]{color:var(--muted);background:#F1F5F9;}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    padding:11px 16px;font-size:13.5px;font-weight:700;border:none;cursor:pointer;font-family:var(--sans);border-radius:6px;
+  }
+  .btn-primary{background:var(--primary);color:#FFFFFF;width:100%;box-shadow: 0 2px 4px rgba(37,99,235,0.2);}
+  .btn-primary:hover{background:var(--primary-hover);}
+  .btn-primary:active{transform:scale(0.99);}
+  .btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+  .btn-danger-x{
+    background:#FEF2F2;border:1px solid #FECACA;color:var(--danger);
+    width:26px;height:26px;font-size:12px;font-weight:700;flex-shrink:0;padding:0;line-height:1;border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .btn-danger-x:hover{background:var(--danger);color:#fff;}
+  .btn-danger-x:disabled{opacity:.5;cursor:not-allowed;}
+
+  .back-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .back-link{color:var(--primary);font-size:11.5px;font-weight:600;cursor:pointer;text-decoration:none;}
+  .back-link:hover{text-decoration:underline;}
+
+  /* ===== RECENT LIST ===== */
+  .recent-box{margin-top:18px;}
+  .recent-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .recent-title{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+  .refresh-link{font-size:10.5px;color:var(--primary);font-weight:600;cursor:pointer;}
+  .refresh-link:hover{text-decoration:underline;}
+  .recent-row{
+    display:flex;align-items:center;gap:8px;
+    background:#FFFFFF;border:1px solid var(--border);border-left:4px solid var(--primary);
+    padding:9px 10px;margin-bottom:6px;font-size:11.5px;border-radius:6px;box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  }
+  .recent-info{flex:1;min-width:0;}
+  .recent-time{font-family:var(--mono);color:var(--primary);font-size:10.5px;font-weight:600;}
+  .recent-meta{color:var(--muted);margin-top:2px;font-weight:500;}
+  .recent-nums{font-family:var(--mono);color:var(--text);margin-top:2px;font-size:10.5px;word-break:break-word;}
+
+  .empty-state{text-align:center;padding:24px 10px;color:var(--muted);font-size:12px;}
+
+  .toast{
+    position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+    background:#1E293B;border:1px solid #334155;color:#FFFFFF;
+    padding:9px 16px;font-size:12px;z-index:1000;box-shadow: 0 4px 16px rgba(0,0,0,.15);
+    opacity:0;pointer-events:none;transition:opacity .25s, bottom .25s; border-radius:6px;
+    max-width:90%;text-align:center;
+  }
+  .toast.show{opacity:1;bottom:24px;}
+  .toast.err{background:#991B1B;border-color:#B91C1C;}
+
+  .install-btn{
+    display:none;align-items:center;gap:6px;
+    background:var(--primary-light);border:1px dashed var(--primary);color:var(--primary);
+    font-size:11px;padding:6px 10px;margin:10px 14px 0;cursor:pointer;border-radius:6px;font-weight:600;
+  }
+  .install-btn.show{display:inline-flex;}
+</style>
+</head>
+<body>
+
+<div class="global-loader" id="globalLoader">
+  <div class="spinner"></div>
+  <span id="loaderText">Memproses...</span>
+</div>
+
+<div class="app-shell">
+  <div class="topbar">
+    <div class="logo-frame">
+      <img src="https://res.cloudinary.com/vf5nikiz/image/upload/v1785164146/IMG_20260707_085722_slsyiz.jpg" alt="Logo">
+    </div>
+    <div class="brand-block">
+      <div class="brand-title">Input Stock Pallet</div>
+      <div class="brand-sub">NDC WAREHOUSE</div>
+    </div>
+    <div class="clock-block">
+      <div class="clock-time" id="clock-live">--:--:--</div>
+      <div class="clock-date" id="clock-date">--/--/----</div>
+    </div>
+    <div class="pic-block">
+      <div class="pic-photo" id="pic-photo">-</div>
+      <div class="pic-text">
+        <span class="pic-role">PIC</span>
+        <span class="pic-name">Handoko</span>
+      </div>
+    </div>
+  </div>
+
+  <button class="install-btn" id="installBtn">⤓ Instal aplikasi ke layar utama</button>
+
+  <div class="wrap" id="app-input">
+
+    <!-- STEP 0: GUDANG -->
+    <div id="step-gudang">
+      <div class="stepper"><span class="step-chip">Gudang</span><span class="step-arrow">›</span><span class="step-chip" style="opacity:.4">Shift</span><span class="step-arrow">›</span><span class="step-chip" style="opacity:.4">Zona</span></div>
+      <h2 class="section-title">Pilih Gudang</h2>
+      <p class="section-hint">Pilih lokasi gudang untuk memulai input stock pallet.</p>
+      <div class="choice-grid" id="gudang-grid"></div>
+    </div>
+
+    <!-- STEP 1: SHIFT -->
+    <div id="step-shift" style="display:none">
+      <div class="back-row"><span class="back-link" data-back="gudang">‹ Ganti Gudang</span></div>
+      <div class="stepper" id="stepper-shift"></div>
+      <h2 class="section-title">Pilih Shift</h2>
+      <p class="section-hint">Gudang: <b id="shift-gudang-label"></b></p>
+      <div class="choice-grid" id="shift-grid"></div>
+    </div>
+
+    <!-- STEP 2: ZONA -->
+    <div id="step-zona" style="display:none">
+      <div class="back-row"><span class="back-link" data-back="shift">‹ Ganti Shift</span></div>
+      <div class="stepper" id="stepper-zona"></div>
+      <h2 class="section-title">Pilih Zona</h2>
+      <div class="choice-grid" id="zona-grid"></div>
+    </div>
+
+    <!-- STEP 3: FORM -->
+    <div id="step-form" style="display:none">
+      <div class="back-row"><span class="back-link" data-back="zona">‹ Ganti Zona</span></div>
+      <div class="stepper" id="stepper-form"></div>
+      <h2 class="section-title">Input Data</h2>
+      <p class="section-hint">Kolom A-D otomatis. Isi kolom E-L sesuai kondisi lapangan.</p>
+
+      <div class="auto-fields">
+        <div class="field"><label><span class="col-letter">A</span>Timestamp</label><input type="text" id="f-timestamp" readonly></div>
+        <div class="field"><label><span class="col-letter">B</span>Gudang</label><input type="text" id="f-gudang" readonly></div>
+        <div class="field"><label><span class="col-letter">C</span>Shift</label><input type="text" id="f-shift" readonly></div>
+        <div class="field"><label><span class="col-letter">D</span>Zona</label><input type="text" id="f-zona" readonly></div>
+      </div>
+
+      <div class="form-panel">
+        <div class="field"><label><span class="col-letter">E</span>Kayu PTI/JPS</label><input type="text" inputmode="numeric" id="f-e" placeholder="0"></div>
+        <div class="field"><label><span class="col-letter">F</span>Plastik Grey</label><input type="text" inputmode="numeric" id="f-f" placeholder="0"></div>
+        <div class="field"><label><span class="col-letter">G</span>Plastik Hitam Tebal</label><input type="text" inputmode="numeric" id="f-g" placeholder="0"></div>
+        <div class="field"><label><span class="col-letter">H</span>Plastik Hitam One Way</label><input type="text" inputmode="numeric" id="f-h" placeholder="0"></div>
+        <div class="field"><label><span class="col-letter">I</span>Kayu Loscam</label><input type="text" inputmode="numeric" id="f-i" placeholder="0"></div>
+        <div class="field"><label><span class="col-letter">J</span>Dedicated DC</label><input type="text" inputmode="numeric" id="f-j" placeholder="0"></div>
+        <div class="field"><label><span class="col-letter">K</span>Pallet Tidak Standar</label><input type="text" id="f-k" placeholder="angka atau keterangan"></div>
+        <div class="field"><label><span class="col-letter">L</span>Tanggal Shift Masuk</label><input type="date" id="f-l"></div>
+        <button class="btn btn-primary" id="submitBtn">Simpan ke Spreadsheet</button>
+      </div>
+
+      <div class="recent-box">
+        <div class="recent-title-row">
+          <div class="recent-title">Input Terakhir · <span id="recent-gudang-label"></span></div>
+          <span class="refresh-link" id="refreshRecent">↻ Muat ulang</span>
+        </div>
+        <div id="recent-list"><div class="empty-state">Memuat data...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================== CONFIG ================== */
+const CONFIG = {
+  WEBAPP_URL: "https://script.google.com/macros/s/AKfycbygOft223PAePGCW52fzB_oojqLjHOKjCZA2rZvlZmctItK9Z_-VzRciuG005FA_338nw/exec",
+  LOGO_URL: "https://res.cloudinary.com/vf5nikiz/image/upload/v1785164146/IMG_20260707_085722_slsyiz.jpg",
+  PIC_PHOTO_URL: "",
+  // Sumber baca data: langsung dari Google Sheets (gviz), tanpa lewat Apps Script
+  SHEET_ID: "1XB6nZCxPxBvNmkF5LdcVKFJHkrRZ22CSuYjL5J7pvGs",
+  SHEET_GID: "710058347" // tab "StockPallet"
+};
+const GVIZ_BASE = "https://docs.google.com/spreadsheets/d/" + CONFIG.SHEET_ID + "/gviz/tq?gid=" + CONFIG.SHEET_GID + "&headers=1&range=A:L&tqx=out:json";
+
+const GUDANG_LIST = ["JATAKE 3","JATAKE 6","POLI UNGGUL","TELESONIK"];
+const SHIFT_LIST = ["Shift 1","Shift 2","Shift 3"];
+const ZONA_LIST = ["Inbound","Picker","Packer","Loading"];
+
+let state = { gudang:null, shift:null, zona:null };
+let cachedData = null;
+
+/* ================== LOADING OVERLAY ================== */
+function showLoader(text = "Memproses..."){
+  document.getElementById('loaderText').textContent = text;
+  document.getElementById('globalLoader').classList.add('active');
+}
+function hideLoader(){
+  document.getElementById('globalLoader').classList.remove('active');
+}
+
+/* ================== PIC PHOTO ================== */
+if(CONFIG.PIC_PHOTO_URL){
+  document.getElementById('pic-photo').innerHTML = '<img src="'+CONFIG.PIC_PHOTO_URL+'" alt="Handoko">';
+}
+
+/* ================== CLOCK ================== */
+function pad(n){return n.toString().padStart(2,'0');}
+function tickClock(){
+  const d = new Date();
+  const hh=pad(d.getHours()), mm=pad(d.getMinutes()), ss=pad(d.getSeconds());
+  const dateStr = pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear();
+  document.getElementById('clock-live').textContent = hh+':'+mm+':'+ss;
+  document.getElementById('clock-date').textContent = dateStr;
+}
+tickClock(); setInterval(tickClock,1000);
+
+/* ================== BUILD GRIDS ================== */
+function buildGrid(container, items, onClick){
+  container.innerHTML = '';
+  items.forEach((label,idx)=>{
+    const b = document.createElement('button');
+    b.className = 'choice-btn';
+    b.innerHTML = '<span class="cb-tag">0'+(idx+1)+'</span>'+label;
+    b.addEventListener('click', ()=>onClick(label));
+    container.appendChild(b);
+  });
+}
+buildGrid(document.getElementById('gudang-grid'), GUDANG_LIST, (g)=>{
+  state.gudang = g;
+  document.getElementById('shift-gudang-label').textContent = g;
+  goStep('shift');
+});
+
+function stepperHTML(activeIdx){
+  const labels = ['Gudang','Shift','Zona'];
+  const vals = [state.gudang, state.shift, state.zona];
+  return labels.map((l,i)=>{
+    const filled = vals[i] ? vals[i] : l;
+    const cls = i < activeIdx ? 'step-chip done' : 'step-chip';
+    return '<span class="'+cls+'" data-jump="'+i+'">'+filled+'</span>' + (i<2 ? '<span class="step-arrow">›</span>' : '');
+  }).join('');
+}
+
+function goStep(step){
+  document.getElementById('step-gudang').style.display = step==='gudang' ? '' : 'none';
+  document.getElementById('step-shift').style.display = step==='shift' ? '' : 'none';
+  document.getElementById('step-zona').style.display = step==='zona' ? '' : 'none';
+  document.getElementById('step-form').style.display = step==='form' ? '' : 'none';
+
+  if(step==='shift'){
+    document.getElementById('stepper-shift').innerHTML = stepperHTML(0);
+    buildGrid(document.getElementById('shift-grid'), SHIFT_LIST, (s)=>{
+      state.shift = s; goStep('zona');
+    });
+  }
+  if(step==='zona'){
+    document.getElementById('stepper-zona').innerHTML = stepperHTML(1);
+    buildGrid(document.getElementById('zona-grid'), ZONA_LIST, (z)=>{
+      state.zona = z; openForm();
+    });
+  }
+}
+
+document.querySelectorAll('[data-back]').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    const target = el.dataset.back;
+    if(target==='gudang'){ state.shift=null; state.zona=null; goStep('gudang'); }
+    if(target==='shift'){ state.zona=null; goStep('shift'); }
+    if(target==='zona'){ goStep('zona'); }
+  });
+});
+
+/* ================== FORM ================== */
+function nowTimestampStr(){
+  const d = new Date();
+  return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+}
+function todayDateInput(){
+  const d = new Date();
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+function openForm(){
+  document.getElementById('stepper-form').innerHTML = stepperHTML(2);
+  document.getElementById('f-timestamp').value = nowTimestampStr();
+  document.getElementById('f-gudang').value = state.gudang;
+  document.getElementById('f-shift').value = state.shift;
+  document.getElementById('f-zona').value = state.zona;
+  ['e','f','g','h','i','j','k'].forEach(k=>document.getElementById('f-'+k).value='');
+  document.getElementById('f-l').value = todayDateInput();
+  document.getElementById('recent-gudang-label').textContent = state.gudang;
+  goStep('form');
+  renderRecent(true);
+}
+
+document.getElementById('submitBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('submitBtn');
+  const payload = {
+    action:'add',
+    timestamp: nowTimestampStr(),
+    gudang: state.gudang,
+    shift: state.shift,
+    zona: state.zona,
+    e: document.getElementById('f-e').value,
+    f: document.getElementById('f-f').value,
+    g: document.getElementById('f-g').value,
+    h: document.getElementById('f-h').value,
+    i: document.getElementById('f-i').value,
+    j: document.getElementById('f-j').value,
+    k: document.getElementById('f-k').value,
+    l: formatDateForSheet(document.getElementById('f-l').value)
+  };
+  btn.disabled = true;
+  showLoader('Menyimpan data...');
+  try{
+    await apiCall(payload);
+    showToast('Data berhasil disimpan.');
+    document.getElementById('f-timestamp').value = nowTimestampStr();
+    ['e','f','g','h','i','j','k'].forEach(k=>document.getElementById('f-'+k).value='');
+    await renderRecent(true);
+  }catch(err){
+    showToast('Gagal menyimpan: '+err.message, true);
+  }
+  hideLoader();
+  btn.disabled = false;
+});
+
+function formatDateForSheet(isoDate){
+  if(!isoDate) return '';
+  const [y,m,d] = isoDate.split('-');
+  return d+'/'+m+'/'+y;
+}
+
+/* ================== TULIS DATA (tetap via Apps Script) ================== */
+async function apiCall(payload){
+  const res = await fetch(CONFIG.WEBAPP_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  });
+  const json = await res.json();
+  if(!json.ok) throw new Error(json.error || 'Unknown error');
+  return json;
+}
+
+/* ================== BACA DATA (langsung dari Google Sheets, gviz) ================== */
+async function fetchAll(forceRefresh = false){
+  if(cachedData && !forceRefresh) return cachedData;
+  try{
+    const url = GVIZ_BASE + '&_ts=' + Date.now();
+    const res = await fetch(url);
+    const text = await res.text();
+    const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?\s*$/);
+    if(!match) throw new Error('Format respons Sheets tidak dikenali');
+    const json = JSON.parse(match[1]);
+    const rawRows = (json.table && json.table.rows) ? json.table.rows : [];
+
+    const getVal = (cells, i) => {
+      const cell = cells[i];
+      if(!cell || cell.v === null || cell.v === undefined) return '';
+      return cell.v;
+    };
+
+    cachedData = rawRows.map((r, idx) => {
+      const c = r.c || [];
+      return {
+        rowIndex: idx + 2, // baris 1 = header, data mulai dari baris 2 sesuai urutan asli sheet
+        timestamp: getVal(c,0),
+        gudang: getVal(c,1),
+        shift: getVal(c,2),
+        zona: getVal(c,3),
+        e: getVal(c,4),
+        f: getVal(c,5),
+        g: getVal(c,6),
+        h: getVal(c,7),
+        i: getVal(c,8),
+        j: getVal(c,9),
+        k: getVal(c,10),
+        l: getVal(c,11)
+      };
+    }).filter(r => r.timestamp !== ''); // buang baris kosong di ujung, tidak mengubah urutan/rowIndex baris di atasnya
+
+    return cachedData;
+  }catch(e){
+    console.error(e);
+    showToast('Gagal memuat data dari Sheets.', true);
+    return cachedData || [];
+  }
+}
+
+/* ================== HAPUS DATA ================== */
+async function deleteRow(rowIndex, timestamp, btnEl){
+  if(!confirm('Hapus input ini?')) return;
+  if(btnEl) btnEl.disabled = true;
+  showLoader('Menghapus data...');
+  try{
+    await apiCall({action:'delete', rowIndex: Number(rowIndex), timestamp: String(timestamp)});
+    // Ambil ulang data langsung dari Sheets (fresh, bukan cache) supaya rowIndex baris lain
+    // ikut ter-update sesuai posisi baru setelah baris terhapus/geser.
+    await renderRecent(true);
+    showToast('Input dihapus.');
+  }catch(err){
+    showToast('Gagal menghapus: '+err.message, true);
+  }
+  hideLoader();
+  if(btnEl) btnEl.disabled = false;
+}
+
+/* ================== RECENT LIST ================== */
+async function renderRecent(forceRefresh){
+  const el = document.getElementById('recent-list');
+  el.innerHTML = '<div class="empty-state">Memuat data...</div>';
+  const rowsData = await fetchAll(forceRefresh);
+  const rows = rowsData.filter(r=>r.gudang===state.gudang).slice(-5).reverse();
+  if(rows.length===0){ el.innerHTML = '<div class="empty-state">Belum ada input untuk gudang ini.</div>'; return; }
+  el.innerHTML = '';
+  rows.forEach(r=>{
+    const row = document.createElement('div');
+    row.className = 'recent-row';
+    row.innerHTML = '<div class="recent-info">'+
+      '<div class="recent-time">'+r.timestamp+'</div>'+
+      '<div class="recent-meta">'+r.shift+' · '+r.zona+'</div>'+
+      '<div class="recent-nums">Kayu PTI/JPS:'+nz(r.e)+' | Plastik Grey:'+nz(r.f)+' | Plastik Hitam Tebal:'+nz(r.g)+'</div>'+
+      '</div>';
+    const x = document.createElement('button');
+    x.className = 'btn-danger-x'; x.textContent = '✕';
+    x.addEventListener('click', ()=>deleteRow(r.rowIndex, r.timestamp, x));
+    row.appendChild(x);
+    el.appendChild(row);
+  });
+}
+function nz(v){ return (v===undefined||v===null||v==='') ? '-' : v; }
+
+document.getElementById('refreshRecent').addEventListener('click', ()=>renderRecent(true));
+
+/* ================== TOAST ================== */
+function showToast(msg, isErr){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr ? ' err' : '');
+  setTimeout(()=>{ t.className = 'toast'; }, 3000);
+}
+
+/* ================== PWA MANIFEST & SW ================== */
+const manifest = {
+  name: "Input Stock Pallet",
+  short_name: "Stock Pallet",
+  start_url: ".",
+  display: "standalone",
+  background_color: "#F8FAFC",
+  theme_color: "#2563EB",
+  icons: [
+    {src: CONFIG.LOGO_URL, sizes:"192x192", type:"image/jpeg"},
+    {src: CONFIG.LOGO_URL, sizes:"512x512", type:"image/jpeg"}
+  ]
+};
+try{
+  const manifestBlob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
+}catch(e){}
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBtn').classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click', async ()=>{
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('installBtn').classList.remove('show');
+});
+</script>
+</body>
+</html>
